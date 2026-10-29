@@ -35,6 +35,7 @@
     ul { list-style: none; margin: 0; padding: 0; }
     li {
       display: flex;
+      flex-wrap: wrap;
       gap: 0.5rem;
       align-items: center;
       padding: 0.5rem;
@@ -42,11 +43,11 @@
       background: #fff;
       border-radius: 0.375rem;
     }
-    li input[type="checkbox"] { width: 1.25rem; height: 1.25rem; flex: none; }
-    .text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-    .done .text { text-decoration: line-through; color: #9ca3af; }
-    .empty, .count { color: #6b7280; }
-    .actions { display: flex; gap: 0.25rem; flex: none; }
+    li input[type="checkbox"] { width: 2.5rem; height: 2.5rem; flex: none; margin: 0; }
+    .text { flex: 1 1 10rem; min-width: 0; overflow-wrap: anywhere; }
+    .done .text { text-decoration: line-through; color: #6b7280; }
+    .empty, .count { color: #4b5563; }
+    .actions { display: flex; gap: 0.25rem; flex: none; margin-left: auto; }
   </style>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
 </head>
@@ -68,7 +69,7 @@
     <ul>
       <template x-for="task in visible" :key="task.id">
         <li :class="{ done: task.completed }">
-          <input type="checkbox" x-model="task.completed" @change="save()" aria-label="Completed">
+          <input type="checkbox" x-model="task.completed" @change="save()" :aria-label="'Mark ' + task.text + ' as completed'">
           <template x-if="editingId !== task.id">
             <span class="text" x-text="task.text" @dblclick="startEdit(task)"></span>
           </template>
@@ -79,7 +80,7 @@
           </template>
           <div class="actions">
             <template x-if="editingId !== task.id">
-              <button type="button" @click="startEdit(task)">Edit</button>
+              <button type="button" :aria-label="'Edit ' + task.text" @click="startEdit(task)">Edit</button>
             </template>
             <template x-if="editingId === task.id">
               <button type="button" @click="saveEdit(task)">Save</button>
@@ -87,7 +88,7 @@
             <template x-if="editingId === task.id">
               <button type="button" @click="editingId = null">Cancel</button>
             </template>
-            <button type="button" @click="remove(task)">Delete</button>
+            <button type="button" :aria-label="'Delete ' + task.text" @click="remove(task)">Delete</button>
           </div>
         </li>
       </template>
@@ -113,12 +114,12 @@
             if (Array.isArray(data)) {
               this.tasks = data
                 .filter((t) => t && typeof t.text === 'string')
-                .map((t, i) => ({ id: t.id ?? i + 1, text: t.text, completed: t.completed === true }));
+                .map((t, i) => ({ id: i + 1, text: t.text, completed: t.completed === true }));
             }
           } catch (e) {
             this.tasks = [];
           }
-          this.nextId = this.tasks.reduce((m, t) => Math.max(m, Number(t.id) || 0), 0) + 1;
+          this.nextId = this.tasks.length + 1;
         },
 
         get visible() {

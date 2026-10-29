@@ -3,7 +3,6 @@
 A software factory for Claude Code, following
 <https://github.com/zazencodes/zazencodes-season-3/tree/main/src/software-factory-claude-code-v2>.
 The app is a static Todo List: `index.html` + `README.md`, Alpine.js via CDN.
-The rest of the repo is the factory itself.
 
 ## Setup
 
