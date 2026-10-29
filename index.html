@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Todo List</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+    }
+    main {
+      max-width: 36rem;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    h1 { margin: 0 0 1rem; }
+    button, input[type="text"] {
+      font: inherit;
+      min-height: 2.5rem;
+      border: 1px solid #9ca3af;
+      border-radius: 0.375rem;
+      padding: 0.25rem 0.75rem;
+      background: #fff;
+    }
+    button { cursor: pointer; }
+    button:hover { background: #e5e7eb; }
+    button[aria-pressed="true"] { background: #2563eb; border-color: #2563eb; color: #fff; }
+    .row { display: flex; gap: 0.5rem; align-items: center; }
+    .row input[type="text"] { flex: 1; min-width: 0; }
+    .filters { display: flex; gap: 0.5rem; margin: 1rem 0; }
+    ul { list-style: none; margin: 0; padding: 0; }
+    li {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      background: #fff;
+      border-radius: 0.375rem;
+    }
+    li input[type="checkbox"] { width: 2.5rem; height: 2.5rem; flex: none; margin: 0; }
+    .text { flex: 1 1 10rem; min-width: 0; overflow-wrap: anywhere; }
+    .done .text { text-decoration: line-through; color: #6b7280; }
+    .empty, .count { color: #4b5563; }
+    .actions { display: flex; gap: 0.25rem; flex: none; margin-left: auto; }
+  </style>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
+</head>
+<body>
+  <main x-data="todoApp">
+    <h1>Todo List</h1>
+
+    <form class="row" @submit.prevent="add()">
+      <input type="text" x-model="newText" aria-label="New task" placeholder="What needs doing?">
+      <button type="submit">Add</button>
+    </form>
+
+    <div class="filters">
+      <template x-for="f in ['All', 'Active', 'Completed']" :key="f">
+        <button type="button" x-text="f" :aria-pressed="filter === f" @click="filter = f"></button>
+      </template>
+    </div>
+
+    <ul>
+      <template x-for="task in visible" :key="task.id">
+        <li :class="{ done: task.completed }">
+          <input type="checkbox" x-model="task.completed" @change="save()" :aria-label="'Mark ' + task.text + ' as completed'">
+          <template x-if="editingId !== task.id">
+            <span class="text" x-text="task.text" @dblclick="startEdit(task)"></span>
+          </template>
+          <template x-if="editingId === task.id">
+            <input type="text" class="text" x-model="editText" aria-label="Edit task"
+                   x-init="$nextTick(() => $el.focus())"
+                   @keydown.enter.prevent="saveEdit(task)" @keydown.escape="editingId = null">
+          </template>
+          <div class="actions">
+            <template x-if="editingId !== task.id">
+              <button type="button" :aria-label="'Edit ' + task.text" @click="startEdit(task)">Edit</button>
+            </template>
+            <template x-if="editingId === task.id">
+              <button type="button" @click="saveEdit(task)">Save</button>
+            </template>
+            <template x-if="editingId === task.id">
+              <button type="button" @click="editingId = null">Cancel</button>
+            </template>
+            <button type="button" :aria-label="'Delete ' + task.text" @click="remove(task)">Delete</button>
+          </div>
+        </li>
+      </template>
+    </ul>
+
+    <p class="empty" x-show="visible.length === 0">No tasks</p>
+    <p class="count" x-text="remaining + (remaining === 1 ? ' task left' : ' tasks left')"></p>
+  </main>
+
+  <script>
+    document.addEventListener('alpine:init', () => {
+      Alpine.data('todoApp', () => ({
+        tasks: [],
+        newText: '',
+        filter: 'All',
+        editingId: null,
+        editText: '',
+        nextId: 1,
+
+        init() {
+          try {
+            const data = JSON.parse(localStorage.getItem('todo-app.tasks'));
+            if (Array.isArray(data)) {
+              this.tasks = data
+                .filter((t) => t && typeof t.text === 'string')
+                .map((t, i) => ({ id: i + 1, text: t.text, completed: t.completed === true }));
+            }
+          } catch (e) {
+            this.tasks = [];
+          }
+          this.nextId = this.tasks.length + 1;
+        },
+
+        get visible() {
+          if (this.filter === 'Active') return this.tasks.filter((t) => !t.completed);
+          if (this.filter === 'Completed') return this.tasks.filter((t) => t.completed);
+          return this.tasks;
+        },
+
+        get remaining() {
+          return this.tasks.filter((t) => !t.completed).length;
+        },
+
+        save() {
+          localStorage.setItem('todo-app.tasks', JSON.stringify(this.tasks));
+        },
+
+        add() {
+          const text = this.newText.trim();
+          if (!text) return;
+          this.tasks.push({ id: this.nextId++, text, completed: false });
+          this.newText = '';
+          this.save();
+        },
+
+        startEdit(task) {
+          this.editingId = task.id;
+          this.editText = task.text;
+        },
+
+        saveEdit(task) {
+          const text = this.editText.trim();
+          if (text) {
+            task.text = text;
+            this.save();
+          }
+          this.editingId = null;
+        },
+
+        remove(task) {
+          this.tasks = this.tasks.filter((t) => t.id !== task.id);
+          if (this.editingId === task.id) this.editingId = null;
+          this.save();
+        },
+      }));
+    });
+  </script>
+</body>
+</html>
