@@ -4,6 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Todo List</title>
+  <script>
+    try {
+      if (localStorage.getItem('todo-app.theme') === 'japonisme') {
+        document.documentElement.dataset.theme = 'japonisme';
+      }
+    } catch (e) {}
+  </script>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -48,12 +55,49 @@
     .done .text { text-decoration: line-through; color: #6b7280; }
     .empty, .count { color: #4b5563; }
     .actions { display: flex; gap: 0.25rem; flex: none; margin-left: auto; }
+
+    html[data-theme="japonisme"] body { background: #e8d9b8; color: #315d78; }
+    html[data-theme="japonisme"] h1 {
+      font-family: Georgia, "Times New Roman", serif;
+      padding: 0.25rem 0 0.5rem 0.75rem;
+      border-left: 1.25rem solid #b45a45;
+      border-bottom: 0.25rem solid #315d78;
+      margin: 0 0 1rem;
+    }
+    html[data-theme="japonisme"] button,
+    html[data-theme="japonisme"] input[type="text"] {
+      background: #f6eedb;
+      color: #315d78;
+      border: 2px solid #315d78;
+      border-radius: 0;
+    }
+    html[data-theme="japonisme"] input[type="text"]::placeholder { color: #315d78; opacity: 0.8; }
+    html[data-theme="japonisme"] button:hover { background: #315d78; color: #f6eedb; }
+    html[data-theme="japonisme"] button[aria-pressed="true"],
+    html[data-theme="japonisme"] button[aria-pressed="true"]:hover {
+      background: #b45a45;
+      border-color: #315d78;
+      color: #fff;
+    }
+    html[data-theme="japonisme"] li {
+      background: #f6eedb;
+      border: 2px solid #315d78;
+      border-left-width: 0.75rem;
+      border-radius: 0;
+    }
+    html[data-theme="japonisme"] .done .text,
+    html[data-theme="japonisme"] .empty,
+    html[data-theme="japonisme"] .count { color: #315d78; }
+    html[data-theme="japonisme"] :focus-visible { outline: 3px solid #315d78; outline-offset: 2px; }
+    .theme-toggle { margin-bottom: 0.5rem; }
+    html[data-theme="japonisme"] li input[type="checkbox"] { accent-color: #315d78; }
   </style>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
 </head>
 <body>
   <main x-data="todoApp">
     <h1>Todo List</h1>
+    <button type="button" class="theme-toggle" :aria-pressed="theme === 'japonisme'" @click="toggleTheme()">Japonisme theme</button>
 
     <form class="row" @submit.prevent="add()">
       <input type="text" x-model="newText" aria-label="New task" placeholder="What needs doing?">
@@ -107,8 +151,12 @@
         editingId: null,
         editText: '',
         nextId: 1,
+        theme: 'plain',
 
         init() {
+          try {
+            if (localStorage.getItem('todo-app.theme') === 'japonisme') this.theme = 'japonisme';
+          } catch (e) {}
           try {
             const data = JSON.parse(localStorage.getItem('todo-app.tasks'));
             if (Array.isArray(data)) {
@@ -130,6 +178,15 @@
 
         get remaining() {
           return this.tasks.filter((t) => !t.completed).length;
+        },
+
+        toggleTheme() {
+          this.theme = this.theme === 'japonisme' ? 'plain' : 'japonisme';
+          if (this.theme === 'japonisme') document.documentElement.dataset.theme = 'japonisme';
+          else delete document.documentElement.dataset.theme;
+          try {
+            localStorage.setItem('todo-app.theme', this.theme);
+          } catch (e) {}
         },
 
         save() {

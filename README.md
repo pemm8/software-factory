@@ -19,10 +19,11 @@ then open <http://localhost:5100/index.html>.
 - Remaining count ("1 task left")
 - Responsive layout
 - Tasks persist in the browser
+- Optional "Japonisme theme" toggle (off by default); the choice persists
 
 ## Data
 
-Tasks are stored in the browser's `localStorage` under `todo-app.tasks`, per browser and per origin, so `file://` and `http://localhost` lists are separate.
+Tasks are stored in the browser's `localStorage` under `todo-app.tasks`, per browser and per origin, so `file://` and `http://localhost` lists are separate. The theme choice is stored under `todo-app.theme` (`'japonisme'` or `'plain'`; anything else means plain).
 
 ## Manual test checklist
 
@@ -36,6 +37,12 @@ Tasks are stored in the browser's `localStorage` under `todo-app.tasks`, per bro
 - [ ] Storage set to `not json` or `{"a":1}` loads an empty list without errors.
 - [ ] A task named `<img src=x onerror=alert(1)>` shows as literal text.
 - [ ] At 320px and 375px there is no horizontal scroll and a 200-character word wraps; at 1280px the column is centred.
+- [ ] With empty storage the page is plain (grey background, blue pressed filter) and the "Japonisme theme" button has `aria-pressed="false"`.
+- [ ] Clicking the toggle gives the paper/indigo/vermilion theme, `aria-pressed="true"`, `<html data-theme="japonisme">` and `todo-app.theme` = `japonisme`; clicking again restores the plain look and stores `plain`.
+- [ ] Reload keeps the chosen theme (on or off) with no flash of the plain style; storage set to `nonsense` loads plain with no console errors.
+- [ ] Tab reaches the toggle; Enter and Space each toggle it; a focus ring is visible on every control in both themes.
+- [ ] With the theme on, body, task, completed, count and "No tasks" text are at least 4.5:1, and text on vermilion fills is white.
+- [ ] With the theme on, tasks still add, edit, complete, filter, delete and persist; at 320px and 375px there is no horizontal scroll, long words wrap, controls are at least 2.5rem tall, and at 1280px the column is centred.
 
 ## Factory
 
